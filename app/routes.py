@@ -50,9 +50,12 @@ def clients(page=1):
 def add_client():
     form = ClientForm()
     if form.validate_on_submit():
+        # Преобразуем дату регистрации из datetime.date в datetime.datetime
+        registration_date = datetime.combine(form.registration_date.data, datetime.min.time())
+
         new_client = {
             "gender": form.gender.data,
-            "registration_date": form.registration_date.data.strftime("%Y-%m-%d"),
+            "registration_date": registration_date,
             "age": form.age.data,
             "height": form.height.data,
             "weight": form.weight.data,
@@ -68,16 +71,25 @@ def add_client():
 @app.route("/edit_client/<client_id>", methods=["GET", "POST"])
 def edit_client(client_id):
     client = db.clients.find_one({"_id": ObjectId(client_id)})
-    
+
+    # Перевіряємо формат поля "registration_date"
     if "registration_date" in client:
-        client["registration_date"] = datetime.strptime(client["registration_date"], "%Y-%m-%d")
+        # Якщо це рядок, перетворюємо його в datetime
+        if isinstance(client["registration_date"], str):
+            client["registration_date"] = datetime.strptime(client["registration_date"], "%Y-%m-%d")
+        # Якщо це об'єкт типу datetime.date, конвертуємо його в datetime.datetime
+        elif isinstance(client["registration_date"], datetime):
+            client["registration_date"] = client["registration_date"]
 
     form = ClientForm(data=client)
 
     if form.validate_on_submit():
+        # Преобразуем дату в datetime.datetime
+        registration_date = datetime.combine(form.registration_date.data, datetime.min.time())
+
         updated_client = {
             "gender": form.gender.data,
-            "registration_date": form.registration_date.data.strftime("%Y-%m-%d"),
+            "registration_date": registration_date,
             "age": form.age.data,
             "height": form.height.data,
             "weight": form.weight.data,
@@ -108,12 +120,22 @@ def view_client(client_id):
 
 # Сторінка зустрічей із пагінацією
 @app.route("/meetings/<int:page>")
+@app.route("/meetings/<int:page>")
 def meetings(page=1):
     per_page = 5
     skip = (page - 1) * per_page
+
+    # Отримуємо всі зустрічі з бази
     meetings_list = list(db.meetings.find().skip(skip).limit(per_page))
+
+    # Завантажуємо деталі клієнтів для кожної зустрічі
+    for meeting in meetings_list:
+        meeting["client1"] = db.clients.find_one({"_id": ObjectId(meeting["client1_id"])})
+        meeting["client2"] = db.clients.find_one({"_id": ObjectId(meeting["client2_id"])})
+
     total_meetings = db.meetings.count_documents({})
     total_pages = (total_meetings + per_page - 1) // per_page
+
     return render_template("meetings.html", meetings=meetings_list, page=page, total_pages=total_pages)
 
 # Додавання нової зустрічі
@@ -173,3 +195,72 @@ def search_clients():
         return render_template("search_clients.html", clients=clients_list)
 
     return render_template("search_clients.html", clients=[])
+
+# Сторінка перегляду клієнтів за кварталом
+@app.route("/clients_by_quarter", methods=["GET"])
+def clients_by_quarter():
+    quarter = request.args.get("quarter", None)
+
+    if not quarter:
+        return render_template("clients_by_quarter.html", clients=[], quarter=None)
+
+    try:
+        quarter = int(quarter)
+    except ValueError:
+        flash("Invalid quarter value!", "danger")
+        return redirect(url_for("clients_by_quarter"))
+
+    current_year = datetime.now().year
+    if quarter == 1:
+        start_date = datetime(current_year, 1, 1)
+        end_date = datetime(current_year, 3, 31)
+    elif quarter == 2:
+        start_date = datetime(current_year, 4, 1)
+        end_date = datetime(current_year, 6, 30)
+    elif quarter == 3:
+        start_date = datetime(current_year, 7, 1)
+        end_date = datetime(current_year, 9, 30)
+    elif quarter == 4:
+        start_date = datetime(current_year, 10, 1)
+        end_date = datetime(current_year, 12, 31)
+    else:
+        flash("Invalid quarter!", "danger")
+        return redirect(url_for("clients_by_quarter"))
+
+    clients_in_quarter = list(db.clients.find({
+        "registration_date": {"$gte": start_date, "$lte": end_date}
+    }))
+
+    if not clients_in_quarter:
+        flash("No clients found for this quarter.", "warning")
+
+    return render_template("clients_by_quarter.html", clients=clients_in_quarter, quarter=quarter)
+
+@app.route("/edit_meeting/<meeting_id>", methods=["GET", "POST"])
+def edit_meeting(meeting_id):
+    # Отримати зустріч із бази даних
+    meeting = db.meetings.find_one({"_id": ObjectId(meeting_id)})
+    if not meeting:
+        flash("Зустріч не знайдено", "danger")
+        return redirect(url_for("meetings", page=1))
+    
+    # Конвертація поля "date" у об'єкт datetime, якщо воно є рядком
+    if "date" in meeting and isinstance(meeting["date"], str):
+        meeting["date"] = datetime.strptime(meeting["date"], "%Y-%m-%d")
+
+    # Отримати всіх клієнтів для випадаючого списку
+    clients_list = list(db.clients.find())
+
+    if request.method == "POST":
+        # Оновлення даних зустрічі
+        updated_meeting = {
+            "client1_id": request.form.get("client1_id"),
+            "client2_id": request.form.get("client2_id"),
+            "date": datetime.strptime(request.form.get("date"), "%Y-%m-%d"),
+            "status": request.form.get("status"),
+        }
+        db.meetings.update_one({"_id": ObjectId(meeting_id)}, {"$set": updated_meeting})
+        flash("Зустріч успішно оновлено!", "success")
+        return redirect(url_for("meetings", page=1))
+
+    return render_template("edit_meeting.html", meeting=meeting, clients=clients_list)
