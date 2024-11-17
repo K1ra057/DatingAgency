@@ -10,7 +10,7 @@
     <div class="container mt-5">
         <h1 class="text-center mb-4">Edit Meeting</h1>
 
-        <!-- Flash-повідомлення -->
+        <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=True) %}
             {% if messages %}
                 <div class="mb-4">
@@ -24,15 +24,15 @@
             {% endif %}
         {% endwith %}
 
-        <!-- Форма редагування зустрічі -->
+        <!-- Meeting Edit Form -->
         <form method="POST" action="/edit_meeting/{{ meeting['_id'] }}">
             <div class="mb-3">
                 <label for="client1_id" class="form-label">Client 1</label>
                 <select id="client1_id" name="client1_id" class="form-select">
                     {% for client in clients %}
-                    <option value="{{ client['_id'] }}" {% if client['_id'] == meeting['client1_id'] %}selected{% endif %}>
-                        {{ client['gender'] }} - {{ client['age'] }} years - {{ client['zodiac_sign'] }}
-                    </option>
+                        <option value="{{ client['_id'] }}" {% if client['_id'] == meeting['client1_id'] %}selected{% endif %}>
+                            {{ client['self_description'] }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>
@@ -41,9 +41,9 @@
                 <label for="client2_id" class="form-label">Client 2</label>
                 <select id="client2_id" name="client2_id" class="form-select">
                     {% for client in clients %}
-                    <option value="{{ client['_id'] }}" {% if client['_id'] == meeting['client2_id'] %}selected{% endif %}>
-                        {{ client['gender'] }} - {{ client['age'] }} years - {{ client['zodiac_sign'] }}
-                    </option>
+                        <option value="{{ client['_id'] }}" {% if client['_id'] == meeting['client2_id'] %}selected{% endif %}>
+                            {{ client['self_description'] }}
+                        </option>
                     {% endfor %}
                 </select>
             </div>

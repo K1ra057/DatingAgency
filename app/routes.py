@@ -142,16 +142,31 @@ def meetings(page=1):
 @app.route("/add_meeting", methods=["GET", "POST"])
 def add_meeting():
     if request.method == "POST":
+        # Отримання даних із форми
+        client1_id = request.form.get("client1_id")
+        client2_id = request.form.get("client2_id")
+        date_str = request.form.get("date")
+        
+        try:
+            # Перетворення дати з рядка у формат datetime
+            date = datetime.strptime(date_str, "%Y-%m-%d")
+        except ValueError:
+            flash("Invalid date format. Please use YYYY-MM-DD.", "danger")
+            return redirect(url_for("add_meeting"))
+
         new_meeting = {
-            "client1_id": request.form.get("client1_id"),
-            "client2_id": request.form.get("client2_id"),
-            "date": request.form.get("date"),
+            "client1_id": client1_id,
+            "client2_id": client2_id,
+            "date": date,  # Зберігаємо дату у форматі datetime
             "status": "planned"
         }
+
+        # Збереження зустрічі в MongoDB
         db.meetings.insert_one(new_meeting)
         flash("Meeting added successfully!", "success")
         return redirect(url_for("meetings", page=1))
 
+    # Завантаження клієнтів для форми створення зустрічі
     clients_list = list(db.clients.find())
     return render_template("add_meeting.html", clients=clients_list)
 
@@ -238,29 +253,67 @@ def clients_by_quarter():
 
 @app.route("/edit_meeting/<meeting_id>", methods=["GET", "POST"])
 def edit_meeting(meeting_id):
-    # Отримати зустріч із бази даних
+    # Отримання зустрічі з бази даних
     meeting = db.meetings.find_one({"_id": ObjectId(meeting_id)})
     if not meeting:
-        flash("Зустріч не знайдено", "danger")
+        flash("Meeting not found!", "danger")
         return redirect(url_for("meetings", page=1))
-    
-    # Конвертація поля "date" у об'єкт datetime, якщо воно є рядком
-    if "date" in meeting and isinstance(meeting["date"], str):
-        meeting["date"] = datetime.strptime(meeting["date"], "%Y-%m-%d")
 
-    # Отримати всіх клієнтів для випадаючого списку
+    # Отримання всіх клієнтів для заповнення форми
     clients_list = list(db.clients.find())
 
     if request.method == "POST":
+        # Отримання даних із форми
+        client1_id = request.form.get("client1_id")
+        client2_id = request.form.get("client2_id")
+        date_str = request.form.get("date")
+        status = request.form.get("status")
+
+        try:
+            # Конвертація дати з рядка у формат datetime
+            date = datetime.strptime(date_str, "%Y-%m-%d")
+        except ValueError:
+            flash("Invalid date format. Please use YYYY-MM-DD.", "danger")
+            return redirect(url_for("edit_meeting", meeting_id=meeting_id))
+
         # Оновлення даних зустрічі
         updated_meeting = {
-            "client1_id": request.form.get("client1_id"),
-            "client2_id": request.form.get("client2_id"),
-            "date": datetime.strptime(request.form.get("date"), "%Y-%m-%d"),
-            "status": request.form.get("status"),
+            "client1_id": client1_id,
+            "client2_id": client2_id,
+            "date": date,
+            "status": status
         }
+
         db.meetings.update_one({"_id": ObjectId(meeting_id)}, {"$set": updated_meeting})
-        flash("Зустріч успішно оновлено!", "success")
+
+        # Якщо статус змінено на "completed", перенесення в архів
+        if status == "completed":
+            db.archive.insert_one({
+                "client1_id": client1_id,
+                "client2_id": client2_id,
+                "archive_date": date
+            })
+            # Видалення завершеної зустрічі з активних
+            db.meetings.delete_one({"_id": ObjectId(meeting_id)})
+
+        flash("Meeting updated successfully!", "success")
         return redirect(url_for("meetings", page=1))
 
     return render_template("edit_meeting.html", meeting=meeting, clients=clients_list)
+
+@app.route("/resolved_pairs")
+def resolved_pairs():
+    # Отримати всі пари з архіву
+    pairs = list(db.archive.find())
+
+    # Оновити кожну пару з деталями клієнтів
+    for pair in pairs:
+        pair["client1"] = db.clients.find_one({"_id": ObjectId(pair["client1_id"])})
+        pair["client2"] = db.clients.find_one({"_id": ObjectId(pair["client2_id"])})
+
+    # Логування для перевірки даних
+    print(f"Знайдено {len(pairs)} пар у архіві.")
+    for pair in pairs:
+        print(pair)
+
+    return render_template("resolved_pairs.html", pairs=pairs)

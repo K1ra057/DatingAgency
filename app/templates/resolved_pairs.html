@@ -10,27 +10,45 @@
     <div class="container mt-5">
         <h1 class="text-center mb-4">Resolved Pairs</h1>
 
+        <!-- Flash-повідомлення -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                <div class="mb-4">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
         <!-- Таблиця з парами -->
         <table class="table table-striped table-bordered">
             <thead>
                 <tr>
-                    <th>Client 1 ID</th>
-                    <th>Client 2 ID</th>
-                    <th>Archive Date</th>
+                    <th>Client 1</th>
+                    <th>Client 2</th>
+                    <th>Date Archived</th>
                 </tr>
             </thead>
             <tbody>
                 {% for pair in pairs %}
                 <tr>
-                    <td>{{ pair["client1_id"] }}</td>
-                    <td>{{ pair["client2_id"] }}</td>
-                    <td>{{ pair["archive_date"] }}</td>
+                    <td>
+                        {{ pair.client1["gender"] }} - {{ pair.client1["age"] }} years - {{ pair.client1["zodiac_sign"] }}
+                    </td>
+                    <td>
+                        {{ pair.client2["gender"] }} - {{ pair.client2["age"] }} years - {{ pair.client2["zodiac_sign"] }}
+                    </td>
+                    <td>{{ pair["archive_date"].strftime('%Y-%m-%d') }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-
-        <a href="/" class="btn btn-secondary mt-4">Back to Home</a>
+        
+        <a href="/" class="btn btn-primary mt-4">Back to Home</a>
     </div>
 
     <!-- Bootstrap JS -->
