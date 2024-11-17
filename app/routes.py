@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from app.forms import ClientForm
-from datetime import datetime
+from datetime import datetime ,timedelta
 
 # Ініціалізація Flask-додатка
 app = Flask(__name__)
@@ -317,3 +317,32 @@ def resolved_pairs():
         print(pair)
 
     return render_template("resolved_pairs.html", pairs=pairs)
+from datetime import datetime, timedelta
+
+@app.route("/meetings_current_month", methods=["GET"])
+def meetings_current_month():
+    """Відображення зустрічей на поточний місяць."""
+    today = datetime.now()
+    start_date = today.replace(day=1)
+    end_date = (start_date + timedelta(days=31)).replace(day=1) - timedelta(seconds=1)
+
+    # Отримуємо зустрічі за поточний місяць
+    meetings = list(db.meetings.find({
+        "date": {"$gte": start_date, "$lte": end_date}
+    }))
+
+    return render_template("meetings_month.html", meetings=meetings, month="current")
+
+@app.route("/meetings_next_month", methods=["GET"])
+def meetings_next_month():
+    """Відображення зустрічей на наступний місяць."""
+    today = datetime.now()
+    start_date = (today.replace(day=1) + timedelta(days=31)).replace(day=1)
+    end_date = (start_date + timedelta(days=31)).replace(day=1) - timedelta(seconds=1)
+
+    # Отримуємо зустрічі за наступний місяць
+    meetings = list(db.meetings.find({
+        "date": {"$gte": start_date, "$lte": end_date}
+    }))
+
+    return render_template("meetings_month.html", meetings=meetings, month="next")
