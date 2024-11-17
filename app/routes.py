@@ -346,3 +346,35 @@ def meetings_next_month():
     }))
 
     return render_template("meetings_month.html", meetings=meetings, month="next")
+
+@app.route("/clients_by_period", methods=["GET"])
+def clients_by_period():
+    # Поточна дата
+    today = datetime.now()
+    
+    # Отримання параметра періоду
+    period = request.args.get("period", "last_month")
+
+    if period == "last_month":
+        # Розрахунок дат для минулого місяця
+        if today.month == 1:  # Січень
+            start_date = datetime(today.year - 1, 12, 1)
+            end_date = datetime(today.year, 1, 1)
+        else:
+            start_date = datetime(today.year, today.month - 1, 1)
+            end_date = datetime(today.year, today.month, 1)
+    elif period == "last_6_months":
+        # Розрахунок дат для останніх 6 місяців
+        start_date = datetime(today.year, today.month, 1) - timedelta(days=180)
+        end_date = today
+    else:
+        flash("Невірний період!", "danger")
+        return redirect(url_for("index"))
+
+    # Запит до бази даних
+    clients = list(db.clients.find({"registration_date": {"$gte": start_date, "$lt": end_date}}))
+
+    # Логування
+    print(f"Знайдено {len(clients)} клієнтів за період {period}: {start_date} - {end_date}")
+
+    return render_template("clients_by_period.html", clients=clients, period=period)
