@@ -48,9 +48,53 @@
                 {{ form.self_description.label(class="form-label") }}
                 {{ form.self_description(class="form-control") }}
             </div>
+            <hr>
+            <h5>Partner Requirements</h5>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="partner_zodiac_sign" class="form-label">Preferred Zodiac Signs</label>
+                    <select name="partner_zodiac_sign" class="form-select">
+                        {% for sign in ["Aries", "Taurus", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"] %}
+                            <option value="{{ sign }}" {% if sign in client.get("partner_requirements", {}).get("zodiac_sign", []) %}selected{% endif %}>
+                                {{ sign }}
+                            </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label for="partner_min_age" class="form-label">Minimum Age</label>
+                    <input type="number" name="partner_min_age" class="form-control" value="{{ client.get('partner_requirements', {}).get('min_age', '') }}">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="partner_max_age" class="form-label">Maximum Age</label>
+                    <input type="number" name="partner_max_age" class="form-control" value="{{ client.get('partner_requirements', {}).get('max_age', '') }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="partner_min_height" class="form-label">Minimum Height (cm)</label>
+                    <input type="number" name="partner_min_height" class="form-control" value="{{ client.get('partner_requirements', {}).get('min_height', '') }}">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="partner_max_height" class="form-label">Maximum Height (cm)</label>
+                    <input type="number" name="partner_max_height" class="form-control" value="{{ client.get('partner_requirements', {}).get('max_height', '') }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="partner_min_weight" class="form-label">Minimum Weight (kg)</label>
+                    <input type="number" name="partner_min_weight" class="form-control" value="{{ client.get('partner_requirements', {}).get('min_weight', '') }}">
+                </div>
+            </div>
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="partner_max_weight" class="form-label">Maximum Weight (kg)</label>
+                    <input type="number" name="partner_max_weight" class="form-control" value="{{ client.get('partner_requirements', {}).get('max_weight', '') }}">
+                </div>
+            </div>
             <button type="submit" class="btn btn-success">Save</button>
         </form>
-
+        
         <a href="/clients/1" class="btn btn-link mt-3">Back to Clients</a>
     </div>
 

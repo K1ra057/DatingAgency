@@ -1,9 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, flash
+from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from pymongo import MongoClient
 from bson.objectid import ObjectId
 from app.forms import ClientForm
 from datetime import datetime ,timedelta
-
+from decorators.role_decorator import role_decorator
 # Ініціалізація Flask-додатка
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -16,6 +16,10 @@ db = client['DatingAgency_Local']
 @app.route("/")
 def index():
     return render_template("index.html")
+
+@app.route("/login")
+def login():
+    return render_template("login.html")
 
 # Сторінка клієнтів із фільтрацією, сортуванням та пагінацією
 @app.route("/clients/<int:page>")
@@ -47,12 +51,11 @@ def clients(page=1):
 
 # Додавання нового клієнта
 @app.route("/add_client", methods=["GET", "POST"])
+@role_decorator("operator")
 def add_client():
     form = ClientForm()
     if form.validate_on_submit():
-        # Преобразуем дату регистрации из datetime.date в datetime.datetime
         registration_date = datetime.combine(form.registration_date.data, datetime.min.time())
-
         new_client = {
             "gender": form.gender.data,
             "registration_date": registration_date,
@@ -60,50 +63,69 @@ def add_client():
             "height": form.height.data,
             "weight": form.weight.data,
             "zodiac_sign": form.zodiac_sign.data,
-            "self_description": form.self_description.data
+            "self_description": form.self_description.data,
+            "partner_requirements": {
+                "zodiac_sign": form.partner_zodiac_sign.data,
+                "min_age": form.partner_min_age.data,
+                "max_age": form.partner_max_age.data,
+                "min_height": form.partner_min_height.data,
+                "max_height": form.partner_max_height.data,
+                "min_weight": form.partner_min_weight.data,
+                "max_weight": form.partner_max_weight.data,
+            },
         }
         db.clients.insert_one(new_client)
         flash("Client added successfully!", "success")
         return redirect(url_for("clients", page=1))
     return render_template("add_client.html", form=form)
 
+
+
 # Редагування клієнта
 @app.route("/edit_client/<client_id>", methods=["GET", "POST"])
+@role_decorator("admin")
 def edit_client(client_id):
     client = db.clients.find_one({"_id": ObjectId(client_id)})
+    if not client:
+        flash("Client not found.", "danger")
+        return redirect(url_for("clients", page=1))
 
-    # Перевіряємо формат поля "registration_date"
-    if "registration_date" in client:
-        # Якщо це рядок, перетворюємо його в datetime
-        if isinstance(client["registration_date"], str):
-            client["registration_date"] = datetime.strptime(client["registration_date"], "%Y-%m-%d")
-        # Якщо це об'єкт типу datetime.date, конвертуємо його в datetime.datetime
-        elif isinstance(client["registration_date"], datetime):
-            client["registration_date"] = client["registration_date"]
-
-    form = ClientForm(data=client)
-
+    form = ClientForm()
     if form.validate_on_submit():
-        # Преобразуем дату в datetime.datetime
-        registration_date = datetime.combine(form.registration_date.data, datetime.min.time())
-
         updated_client = {
-            "gender": form.gender.data,
-            "registration_date": registration_date,
+            "gender": request.form.get("gender"),
+            "registration_date": datetime.combine(form.registration_date.data, datetime.min.time()),
             "age": form.age.data,
             "height": form.height.data,
             "weight": form.weight.data,
             "zodiac_sign": form.zodiac_sign.data,
-            "self_description": form.self_description.data
+            "self_description": form.self_description.data,
+            "partner_requirements": {
+                "zodiac_sign": request.form.getlist("partner_zodiac_sign"),
+                "min_age": request.form.get("partner_min_age"),
+                "max_age": request.form.get("partner_max_age"),
+                "min_height": request.form.get("partner_min_height"),
+                "max_height": request.form.get("partner_max_height"),
+                "min_weight": request.form.get("partner_min_weight"),
+                "max_weight": request.form.get("partner_max_weight"),
+            },
         }
         db.clients.update_one({"_id": ObjectId(client_id)}, {"$set": updated_client})
         flash("Client updated successfully!", "success")
         return redirect(url_for("clients", page=1))
 
-    return render_template("edit_client.html", form=form, client=client, client_id=client_id)
+    form.gender.data = client.get("gender")
+    form.registration_date.data = client.get("registration_date")
+    form.age.data = client.get("age")
+    form.height.data = client.get("height")
+    form.weight.data = client.get("weight")
+    form.zodiac_sign.data = client.get("zodiac_sign")
+    form.self_description.data = client.get("self_description")
+    return render_template("edit_client.html", form=form, client=client)
 
 # Видалення клієнта
-@app.route("/delete_client/<client_id>")
+@app.route("/delete_client/<client_id>", methods=["DELETE"])
+@role_decorator("owner")
 def delete_client(client_id):
     db.clients.delete_one({"_id": ObjectId(client_id)})
     flash("Client deleted successfully!", "success")
@@ -119,7 +141,6 @@ def view_client(client_id):
     return render_template("view_client.html", client=client)
 
 # Сторінка зустрічей із пагінацією
-@app.route("/meetings/<int:page>")
 @app.route("/meetings/<int:page>")
 def meetings(page=1):
     per_page = 5
@@ -140,6 +161,7 @@ def meetings(page=1):
 
 # Додавання нової зустрічі
 @app.route("/add_meeting", methods=["GET", "POST"])
+@role_decorator("operator")
 def add_meeting():
     if request.method == "POST":
         # Отримання даних із форми
@@ -252,6 +274,7 @@ def clients_by_quarter():
     return render_template("clients_by_quarter.html", clients=clients_in_quarter, quarter=quarter)
 
 @app.route("/edit_meeting/<meeting_id>", methods=["GET", "POST"])
+@role_decorator("admin")
 def edit_meeting(meeting_id):
     # Отримання зустрічі з бази даних
     meeting = db.meetings.find_one({"_id": ObjectId(meeting_id)})
@@ -301,6 +324,12 @@ def edit_meeting(meeting_id):
 
     return render_template("edit_meeting.html", meeting=meeting, clients=clients_list)
 
+@app.route("/delete_meeting/<meeting_id>", methods=["DELETE"])
+@role_decorator("owner")
+def delete_meeting(meeting_id):
+    db.meetings.delete_one({"_id": ObjectId(meeting_id)})
+    return jsonify({"message" : "meeting deleted successfully"})
+    
 @app.route("/resolved_pairs")
 def resolved_pairs():
     # Отримати всі пари з архіву
@@ -378,3 +407,91 @@ def clients_by_period():
     print(f"Знайдено {len(clients)} клієнтів за період {period}: {start_date} - {end_date}")
 
     return render_template("clients_by_period.html", clients=clients, period=period)
+@app.route("/non_missing_partners", methods=["GET"])
+def non_missing_partners():
+    # Отримання статі з параметрів
+    gender = request.args.get("gender", None)
+
+    if not gender:
+        # Якщо стать не обрана, повертаємо форму
+        return render_template("non_missing_partners.html", partners=[])
+
+    # Запит до MongoDB для клієнтів із обраною статтю
+    clients = list(db.clients.find({"gender": gender}))
+
+    # Фільтрація клієнтів, які не пропустили жодної зустрічі
+    result = []
+    for client in clients:
+        meetings = list(db.meetings.find({"$or": [{"client1_id": str(client["_id"])}, {"client2_id": str(client["_id"])}]}))
+        if all(meeting["status"] == "completed" for meeting in meetings):
+            result.append(client)
+
+    # Логування
+    print(f"Знайдено {len(result)} клієнтів, які не пропустили зустрічей.")
+
+    return render_template("non_missing_partners.html", partners=result, gender=gender)
+@app.route("/matching_grooms", methods=["GET"])
+def matching_grooms():
+    # Отримати всіх жінок із бази
+    brides = list(db.clients.find({"gender": "female"}))
+    results = []
+
+    for bride in brides:
+        # Умови для пошуку чоловіків
+        partner_requirements = bride.get("partner_requirements", {})
+        query = {
+            "gender": "male",
+            "age": {"$gte": partner_requirements.get("age", [0])[0], "$lte": partner_requirements.get("age", [100])[1]},
+            "height": {"$gte": partner_requirements.get("height", [0])[0], "$lte": partner_requirements.get("height", [250])[1]},
+            "weight": {"$gte": partner_requirements.get("weight", [0])[0], "$lte": partner_requirements.get("weight", [300])[1]},
+            "zodiac_sign": {"$in": partner_requirements.get("zodiac_sign", [])},
+        }
+
+        # Підрахунок чоловіків, які відповідають вимогам
+        matching_grooms_count = db.clients.count_documents(query)
+        results.append({
+            "bride": bride["self_description"],
+            "matching_grooms_count": matching_grooms_count,
+        })
+
+    # Відображення результату
+    return render_template("matching_grooms.html", results=results)
+
+
+@app.route('/api/login', methods=['POST'])
+def api_login():
+    data = request.json
+    login = data.get('login')
+    password = data.get('password')
+    print(login)
+    print(password)
+    user = db.Keys.find_one({"login":login, "password" : password})
+    if user is not None:
+        return jsonify({"role": user['role']}), 200
+    else:
+        return jsonify({"error": "Invalid login or password"}), 401
+
+@app.route('/api/register', methods=['POST'])
+@role_decorator("admin")
+def register():
+    data = request.json
+    login = data.get('login')
+    password = data.get('password')
+    role = data.get('role')
+    current_role = request.cookies.get('role')    
+    user = db.Keys.find_one({"login":login})
+    if user is not None:
+        return jsonify({"error": "User already exists"}), 409
+    if (role == "admin" and current_role != "owner"):
+        return jsonify({"error": "Only owner can add admin"}), 403
+    db.Keys.insert_one({"login" : login, "password" : password, "role" : role})
+    return jsonify({"message": "User registered successfully"}), 201
+
+@app.route('/api/forgot-password', methods=['GET'])
+def forgot_password():
+    login = request.args.get('login')
+    user = db.Keys.find_one({"login":login})
+    if user is not None:
+        return jsonify({"password": user['password']}), 200
+    else:
+        return jsonify({"error": "User not found"}), 404

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login / Registration</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+    }
+    .container {
+      max-width: 400px;
+      margin: 50px auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .form {
+      display: none;
+    }
+    .form.active {
+      display: block;
+    }
+    .form-group {
+      margin-bottom: 15px;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 5px;
+    }
+    .form-group input, .form-group select {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+    .form-group button {
+      width: 100%;
+      padding: 10px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .form-group button:hover {
+      background-color: #0056b3;
+    }
+    .toggle {
+      text-align: center;
+      margin-top: 10px;
+      cursor: pointer;
+      color: #007bff;
+    }
+    .toggle:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="loginForm" class="form active">
+      <h2>Login</h2>
+      <div class="form-group">
+        <label for="login">Login:</label>
+        <input type="text" id="login" required>
+      </div>
+      <div class="form-group">
+        <label for="password">Password:</label>
+        <input type="password" id="password" required>
+      </div>
+      <div class="form-group">
+        <button onclick="handleLogin()">Login</button>
+      </div>
+      <div class="form-group">
+        <button onclick="handleForgotPassword()">Forgot Password</button>
+      </div>
+      <div class="toggle" onclick="toggleForms()">Don't have an account? Register</div>
+    </div>
+
+    <div id="registerForm" class="form">
+      <h2>Register</h2>
+      <div class="form-group">
+        <label for="regLogin">Login:</label>
+        <input type="text" id="regLogin" required>
+      </div>
+      <div class="form-group">
+        <label for="regPassword">Password:</label>
+        <input type="password" id="regPassword" required>
+      </div>
+      <div class="form-group">
+        <label for="regRole">Role:</label>
+        <select id="regRole">
+          <option value="admin">Admin</option>
+          <option value="operator">Operator</option>
+          <option value="guest">Guest</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <button onclick="handleRegister()">Register</button>
+      </div>
+      <div class="toggle" onclick="toggleForms()">Already have an account? Login</div>
+    </div>
+  </div>
+
+  <script>
+    function toggleForms() {
+      document.getElementById('loginForm').classList.toggle('active');
+      document.getElementById('registerForm').classList.toggle('active');
+    }
+
+    function setCookie(name, value, days) {
+      const date = new Date();
+      date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+      document.cookie = `${name}=${value};expires=${date.toUTCString()};path=/`;
+    }
+
+    function getCookie(name) {
+      const value = `; ${document.cookie}`;
+      const parts = value.split(`; ${name}=`);
+      if (parts.length === 2) return parts.pop().split(';').shift();
+      return null;
+    }
+
+    async function handleLogin() {
+      const login = document.getElementById('login').value;
+      const password = document.getElementById('password').value;
+
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login, password })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setCookie('role', data.role, 1);
+        alert('Login successful!');
+        location.replace("/")
+      } else {
+        alert('Login failed. Please check your credentials.');
+      }
+    }
+
+    async function handleForgotPassword() {
+      const login = document.getElementById('login').value;
+
+      if (!login) {
+        alert('Please enter your login to retrieve the password.');
+        return;
+      }
+
+      const response = await fetch(`/api/forgot-password?login=${encodeURIComponent(login)}`);
+      if (response.ok) {
+        const data = await response.json();
+        alert(`Your password is: ${data.password}`);
+      } else {
+        alert('Failed to retrieve password.');
+      }
+    }
+
+    async function handleRegister() {
+      const login = document.getElementById('regLogin').value;
+      const password = document.getElementById('regPassword').value;
+      const role = document.getElementById('regRole').value;
+
+      const currentRole = getCookie('role');
+      if (!['admin', 'owner'].includes(currentRole)) {
+        alert('Only admins or owners can register new users.');
+        return;
+      }
+
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login, password, role })
+      });
+
+      if (response.ok) {
+        alert('Registration successful!');
+        toggleForms();
+      } else {
+        alert('Registration failed.');
+      }
+    }
+  </script>
+</body>
+</html>

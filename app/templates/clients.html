@@ -75,6 +75,7 @@
                     <th>Weight (kg)</th>
                     <th>Zodiac Sign</th>
                     <th>Description</th>
+                    <th>Partner requirements</th>
                     <th>Actions</th>
                 </tr>
             </thead>
@@ -87,12 +88,24 @@
                     <td>{{ client["height"] }}</td>
                     <td>{{ client["weight"] }}</td>
                     <td>{{ client["zodiac_sign"] }}</td>
-                    <td>{{ client["self_description"] }}</td>
+                    <td>{{ client["self_description"] }}</td>                    
+                    <td>{{client["partner_requirements"] }}</td>
                     <td>
                         <a href="/view_client/{{ client['_id'] }}" class="btn btn-sm btn-info">View</a>
-                        <a href="/edit_client/{{ client['_id'] }}" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="/delete_client/{{ client['_id'] }}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?');">Delete</a>
-                    </td>
+                        <button
+                        class="btn btn-sm btn-warning"
+                        data-id="{{ client['_id'] }}"
+                        onclick="editClient(this)"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        class="btn btn-sm btn-danger"
+                        data-id="{{ client['_id'] }}"
+                        onclick="deleteClient(this)"
+                      >
+                        Delete
+                      </button> </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -121,7 +134,33 @@
 
         <a href="/" class="btn btn-primary mt-4">Back to Home</a>
     </div>
-
+    <script>
+        async function editClient(button) {
+          const clientId = button.getAttribute("data-id");
+          
+        location.replace(`/edit_client/${clientId}`);
+        }
+  
+        async function deleteClient(button) {
+          const clientId = button.getAttribute("data-id");
+          if (!confirm("Are you sure?")) return;
+  
+          fetch(`/delete_client/${clientId}`, {
+            method: "DELETE",
+          })
+            .then((response) => {
+              if (response.ok) {
+                alert("Client deleted successfully");
+                location.reload();
+              } else {
+                alert("Failed to delete client, " + response.statusText);
+              }
+            })
+            .catch((error) => {
+              console.error("Error deleting client:", error);
+            });
+        }
+      </script>
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>

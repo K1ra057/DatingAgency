@@ -1,57 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Add Client</title>
-</head>
-<body>
+  </head>
+  <body>
     <div class="container mt-5">
-        <h1 class="text-center mb-4">Add New Client</h1>
+      <h1 class="text-center mb-4">Add New Client</h1>
 
-        <!-- Форма додавання клієнта -->
-        <form method="POST">
-            {{ form.hidden_tag() }}
-            <div class="row mb-3">
-                <div class="col-md-6">
-                    {{ form.gender.label(class="form-label") }}
-                    {{ form.gender(class="form-select") }}
-                </div>
-                <div class="col-md-6">
-                    {{ form.registration_date.label(class="form-label") }}
-                    {{ form.registration_date(class="form-control") }}
-                </div>
-            </div>
-            <div class="row mb-3">
-                <div class="col-md-4">
-                    {{ form.age.label(class="form-label") }}
-                    {{ form.age(class="form-control") }}
-                </div>
-                <div class="col-md-4">
-                    {{ form.height.label(class="form-label") }}
-                    {{ form.height(class="form-control") }}
-                </div>
-                <div class="col-md-4">
-                    {{ form.weight.label(class="form-label") }}
-                    {{ form.weight(class="form-control") }}
-                </div>
-            </div>
-            <div class="mb-3">
-                {{ form.zodiac_sign.label(class="form-label") }}
-                {{ form.zodiac_sign(class="form-control") }}
-            </div>
-            <div class="mb-3">
-                {{ form.self_description.label(class="form-label") }}
-                {{ form.self_description(class="form-control") }}
-            </div>
-            <button type="submit" class="btn btn-success">Add Client</button>
-        </form>
+      <!-- Форма додавання клієнта -->
+      <form method="POST">
+        {{ form.hidden_tag() }}
+        <div class="row mb-3">
+          <div class="col-md-6">
+            {{ form.gender.label(class="form-label") }} {{
+            form.gender(class="form-select") }}
+          </div>
+          <div class="col-md-6">
+            {{ form.registration_date.label(class="form-label") }} {{
+            form.registration_date(class="form-control") }}
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-4">
+            {{ form.age.label(class="form-label") }} {{
+            form.age(class="form-control") }}
+          </div>
+          <div class="col-md-4">
+            {{ form.height.label(class="form-label") }} {{
+            form.height(class="form-control") }}
+          </div>
+          <div class="col-md-4">
+            {{ form.weight.label(class="form-label") }} {{
+            form.weight(class="form-control") }}
+          </div>
+        </div>
+        <div class="mb-3">
+          {{ form.zodiac_sign.label(class="form-label") }} {{
+          form.zodiac_sign(class="form-control") }}
+        </div>
+        <div class="mb-3">
+          {{ form.self_description.label(class="form-label") }} {{
+          form.self_description(class="form-control") }}
+        </div>
+        <hr />
+        <h5>Partner Requirements</h5>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="partner_zodiac_sign" class="form-label"
+              >Preferred Zodiac Signs</label
+            >
+            <select
+              id="partner_zodiac_sign"
+              name="partner_zodiac_sign"
+              class="form-select"
+              multiple
+            >
+              <option value="Taurus">Taurus</option>
+              <option value="Gemini">Gemini</option>
+              <option value="Aries">Aries</option>
+              <option value="Cancer">Cancer</option>
+              <option value="Leo">Leo</option>
+              <option value="Virgo">Virgo</option>
+              <option value="Libra">Libra</option>
+              <option value="Scorpio">Scorpio</option>
+              <option value="Sagittarius">Sagittarius</option>
+              <option value="Capricorn">Capricorn</option>
+              <option value="Aquarius">Aquarius</option>
+              <option value="Pisces">Pisces</option>
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label for="partner_min_age" class="form-label">Minimum Age</label>
+            <input
+              type="number"
+              id="partner_min_age"
+              name="partner_min_age"
+              class="form-control"
+              min="18"
+              max="99"
+            />
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="partner_max_age" class="form-label">Maximum Age</label>
+            <input
+              type="number"
+              id="partner_max_age"
+              name="partner_max_age"
+              class="form-control"
+              min="18"
+              max="99"
+            />
+          </div>
+          <div class="col-md-6">
+            <label for="partner_min_height" class="form-label"
+              >Minimum Height (cm)</label
+            >
+            <input
+              type="number"
+              id="partner_min_height"
+              name="partner_min_height"
+              class="form-control"
+              min="100"
+              max="250"
+            />
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="partner_max_height" class="form-label"
+              >Maximum Height (cm)</label
+            >
+            <input
+              type="number"
+              id="partner_max_height"
+              name="partner_max_height"
+              class="form-control"
+              min="100"
+              max="250"
+            />
+          </div>
+          <div class="col-md-6">
+            <label for="partner_min_weight" class="form-label"
+              >Minimum Weight (kg)</label
+            >
+            <input
+              type="number"
+              id="partner_min_weight"
+              name="partner_min_weight"
+              class="form-control"
+              min="30"
+              max="150"
+            />
+          </div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label for="partner_max_weight" class="form-label"
+              >Maximum Weight (kg)</label
+            >
+            <input
+              type="number"
+              id="partner_max_weight"
+              name="partner_max_weight"
+              class="form-control"
+              min="30"
+              max="150"
+            />
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success">Add Client</button>
+      </form>
 
-        <a href="/clients/1" class="btn btn-link mt-3">Back to Clients</a>
+      <a href="/clients/1" class="btn btn-link mt-3">Back to Clients</a>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-</body>
+  </body>
 </html>
