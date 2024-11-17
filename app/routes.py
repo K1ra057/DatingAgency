@@ -495,3 +495,26 @@ def forgot_password():
         return jsonify({"password": user['password']}), 200
     else:
         return jsonify({"error": "User not found"}), 404
+@app.route("/select_user", methods=["GET"])
+def select_user():
+    users = list(db.clients.find())  # Отримати список користувачів
+    return render_template("select_user.html", users=users)
+@app.route("/matches/<user_id>", methods=["GET"])
+def matches(user_id):
+    user = db.clients.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        flash("User not found!", "danger")
+        return redirect(url_for("select_user"))
+
+    # Витягування вимог до партнера
+    requirements = user.get("partner_requirements", {})
+    query = {
+        "age": {"$gte": requirements.get("min_age", 0), "$lte": requirements.get("max_age", 120)},
+        "height": {"$gte": requirements.get("min_height", 0), "$lte": requirements.get("max_height", 250)},
+       "weight": {"$gte": requirements.get("min_weight", 0), "$lte": requirements.get("max_weight", 300)},
+       "zodiac_sign": {"$in": requirements.get("zodiac_sign", [])},
+       "gender": "male" if user["gender"] == "female" else "female"
+    }
+    
+    matches = list(db.clients.find(query))
+    return render_template("matches.html", user=user, matches=matches)
