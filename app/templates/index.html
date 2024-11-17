@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dating Agency</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Welcome to the Dating Agency System</h1>
+
+        <!-- Flash-повідомлення -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                <div class="mb-4">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Навігаційна панель -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+            <ul class="navbar-nav me-auto">
+                <li class="nav-item"><a class="nav-link" href="/clients/1">View All Clients</a></li>
+                <li class="nav-item"><a class="nav-link" href="/add_client">Add New Client</a></li>
+                <li class="nav-item"><a class="nav-link" href="/meetings/1">View Meetings</a></li>
+                <li class="nav-item"><a class="nav-link" href="/add_meeting">Add New Meeting</a></li>
+                <li class="nav-item"><a class="nav-link" href="/archive">View Archive</a></li>
+                <li class="nav-item"><a class="nav-link" href="/search_clients">Search Clients</a></li>
+            </ul>
+        </nav>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

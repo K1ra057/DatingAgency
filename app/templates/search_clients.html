@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Clients</title>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">Search Clients</h1>
+
+        <!-- Flash-повідомлення -->
+        {% with messages = get_flashed_messages(with_categories=True) %}
+            {% if messages %}
+                <div class="mb-4">
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Форма пошуку -->
+        <form method="POST" class="mb-4">
+            <div class="row mb-3">
+                <div class="col-md-4">
+                    <label for="gender" class="form-label">Gender:</label>
+                    <select name="gender" id="gender" class="form-select">
+                        <option value="">Any</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </div>
+                <div class="col-md-4">
+                    <label for="zodiac_sign" class="form-label">Zodiac Sign:</label>
+                    <input type="text" name="zodiac_sign" id="zodiac_sign" class="form-control" placeholder="Enter zodiac sign">
+                </div>
+                <div class="col-md-4">
+                    <label for="age_range" class="form-label">Age Range:</label>
+                    <div class="input-group">
+                        <input type="number" name="age_min" id="age_min" class="form-control" placeholder="Min age">
+                        <input type="number" name="age_max" id="age_max" class="form-control" placeholder="Max age">
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Search</button>
+        </form>
+
+        <!-- Результати пошуку -->
+        <h2 class="mb-3">Results:</h2>
+        <table class="table table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Gender</th>
+                    <th>Age</th>
+                    <th>Height (cm)</th>
+                    <th>Weight (kg)</th>
+                    <th>Zodiac Sign</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for client in clients %}
+                <tr>
+                    <td>{{ client["_id"] }}</td>
+                    <td>{{ client["gender"] }}</td>
+                    <td>{{ client["age"] }}</td>
+                    <td>{{ client["height"] }}</td>
+                    <td>{{ client["weight"] }}</td>
+                    <td>{{ client["zodiac_sign"] }}</td>
+                    <td>{{ client["self_description"] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <a href="/" class="btn btn-link mt-3">Back to Home</a>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
