@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     body {
       font-family: Arial, sans-serif;
     }
+
     .container {
       max-width: 400px;
       margin: 50px auto;
@@ -16,24 +18,31 @@
       border-radius: 8px;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
+
     .form {
       display: none;
     }
+
     .form.active {
       display: block;
     }
+
     .form-group {
       margin-bottom: 15px;
     }
+
     .form-group label {
       display: block;
       margin-bottom: 5px;
     }
-    .form-group input, .form-group select {
+
+    .form-group input,
+    .form-group select {
       width: 100%;
       padding: 8px;
       box-sizing: border-box;
     }
+
     .form-group button {
       width: 100%;
       padding: 10px;
@@ -42,20 +51,24 @@
       border: none;
       cursor: pointer;
     }
+
     .form-group button:hover {
       background-color: #0056b3;
     }
+
     .toggle {
       text-align: center;
       margin-top: 10px;
       cursor: pointer;
       color: #007bff;
     }
+
     .toggle:hover {
       text-decoration: underline;
     }
   </style>
 </head>
+
 <body>
   <div class="container">
     <div id="loginForm" class="form active">
@@ -127,8 +140,13 @@
 
       const response = await fetch('/api/login', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ login, password })
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          login,
+          password
+        })
       });
 
       if (response.ok) {
@@ -171,8 +189,14 @@
 
       const response = await fetch('/api/register', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ login, password, role })
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          login,
+          password,
+          role
+        })
       });
 
       if (response.ok) {
@@ -184,4 +208,5 @@
     }
   </script>
 </body>
+
 </html>

@@ -1,120 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Dating Agency</title>
-  </head>
-  <body>
-    <a href="/login">Login/registration</a>
-    <button onclick="logout()">Log out</button>
-    <div class="container mt-5">
-      <h1 class="text-center mb-4">Welcome to the Dating Agency System</h1>
 
-      <!-- Flash-повідомлення -->
-      {% with messages = get_flashed_messages(with_categories=True) %} {% if
+<head>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dating Agency</title>
+</head>
+
+<body>
+  <a href="/login">Login/registration</a>
+  <button onclick="logout()">Log out</button>
+  <div class="container mt-5">
+    <h1 class="text-center mb-4">Welcome to the Dating Agency System</h1>
+
+    <!-- Flash-повідомлення -->
+    {% with messages = get_flashed_messages(with_categories=True) %} {% if
       messages %}
-      <div class="mb-4">
-        {% for category, message in messages %}
-        <div
-          class="alert alert-{{ category }} alert-dismissible fade show"
-          role="alert"
-        >
-          {{ message }}
-          <button
-            type="button"
-            class="btn-close"
-            data-bs-dismiss="alert"
-            aria-label="Close"
-          ></button>
-        </div>
-        {% endfor %}
+    <div class="mb-4">
+      {% for category, message in messages %}
+      <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
       </div>
-      {% endif %} {% endwith %}
+      {% endfor %}
+    </div>
+    {% endif %} {% endwith %}
 
-      <!-- Навігаційна панель -->
-      <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
-        <ul class="navbar-nav me-auto">
-          <li class="nav-item">
-            <a class="nav-link" href="/clients/1">View All Clients</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/add_client">Add New Client</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/meetings/1">View Meetings</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/add_meeting">Add New Meeting</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/archive">View Archive</a>
-          </li>
-          <li class="nav-item">
-            <a class="nav-link" href="/search_clients">Search Clients</a>
-          </li>
-        </ul>
-      </nav>
+    <!-- Навігаційна панель -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light mb-4">
+      <ul class="navbar-nav me-auto">
+        <li class="nav-item">
+          <a class="nav-link" href="/clients/1">View All Clients</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/add_client">Add New Client</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/meetings/1">View Meetings</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/add_meeting">Add New Meeting</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/archive">View Archive</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="/search_clients">Search Clients</a>
+        </li>
+      </ul>
+    </nav>
 
-      <!--Запити -->
-      <div class="text-center mt-4">
-        <a href="/clients_by_quarter" class="btn btn-success"
-          >View Clients by Quarter</a
-        >
-        <a href="/resolved_pairs" class="btn btn-success"
-          >View Resolved Pairs</a
-        >
-        <a href="/meetings_current_month" class="btn btn-success"
-          >View Meetings by Month</a
-        >
-        <a href="/clients_by_period" class="btn btn-primary"
-          >View Registered Clients by Period</a
-        >
-        <a href="/non_missing_partners" class="btn btn-warning"
-          >Find Non-Missing Partners</a
-        >
-        <a href="/matching_grooms" class="btn btn-primary"
-          >View Matching Grooms</a
-        >
-      </div>
-
-      <div class="text-center mt-4">
-        <a href="/select_user" class="btn btn-primary">Find Matches</a>
-      </div>
+    <!--Запити -->
+    <div class="text-center mt-4">
+      <a href="/clients_by_quarter" class="btn btn-success">View Clients by Quarter</a>
+      <a href="/resolved_pairs" class="btn btn-success">View Resolved Pairs</a>
+      <a href="/meetings_current_month" class="btn btn-success">View Meetings by Month</a>
+      <a href="/clients_by_period" class="btn btn-primary">View Registered Clients by Period</a>
+      <a href="/non_missing_partners" class="btn btn-warning">Find Non-Missing Partners</a>
+      <a href="/matching_grooms" class="btn btn-primary">View Matching Grooms</a>
     </div>
 
-    <script>
-      function getCookie(name) {
-        var nameEQ = name + "=";
-        var ca = document.cookie.split(";");
-        for (var i = 0; i < ca.length; i++) {
-          var c = ca[i];
-          while (c.charAt(0) == " ") c = c.substring(1, c.length);
-          if (c.indexOf(nameEQ) == 0)
-            return c.substring(nameEQ.length, c.length);
-        }
-        return null;
+    <div class="text-center mt-4">
+      <a href="/select_user" class="btn btn-primary">Find Matches</a>
+      <a href="/canceled_meetings" class="btn btn-primary">Canceled meetings</a>
+      <a href="/completed_meetings" class="btn btn-primary">Completed meetings</a>
+    </div>
+  </div>
+
+  <script>
+    function getCookie(name) {
+      var nameEQ = name + "=";
+      var ca = document.cookie.split(";");
+      for (var i = 0; i < ca.length; i++) {
+        var c = ca[i];
+        while (c.charAt(0) == " ") c = c.substring(1, c.length);
+        if (c.indexOf(nameEQ) == 0)
+          return c.substring(nameEQ.length, c.length);
       }
-      function deleteCookie(name) {
-        console.log(name);
-        document.cookie = name + "=; Max-Age=-99999999;";
-      }
-      function logout() {
-        deleteCookie("role");
+      return null;
+    }
+
+    function deleteCookie(name) {
+      console.log(name);
+      document.cookie = name + "=; Max-Age=-99999999;";
+    }
+
+    function logout() {
+      deleteCookie("role");
+      location.replace("/login");
+    }
+
+    function checkRole() {
+      if (getCookie("role") == null) {
         location.replace("/login");
       }
-      function checkRole() {
-        if (getCookie("role") == null) {
-          location.replace("/login");
-        }
-      }
-      checkRole();
-    </script>
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
-  </body>
+    }
+    checkRole();
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
 </html>
