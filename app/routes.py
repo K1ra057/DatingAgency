@@ -481,25 +481,47 @@ def matching_grooms():
     results = []
 
     for bride in brides:
-        # Умови для пошуку чоловіків
+        # Отримання вимог до партнера
         partner_requirements = bride.get("partner_requirements", {})
+
+        # Отримуємо діапазон віку
+        age_min = partner_requirements.get("min_age", 0)
+        age_max = partner_requirements.get("max_age", 120)
+
+        # Отримуємо діапазон зросту
+        height_min = partner_requirements.get("min_height", 0)
+        height_max = partner_requirements.get("max_height", 250)
+
+        # Отримуємо діапазон ваги
+        weight_min = partner_requirements.get("min_weight", 0)
+        weight_max = partner_requirements.get("max_weight", 300)
+
+        # Отримуємо знаки зодіаку
+        zodiac_signs = partner_requirements.get("zodiac_signs", [])
+        if not isinstance(zodiac_signs, list):  # Переконуємося, що це список
+            zodiac_signs = [zodiac_signs]
+
+        # Формуємо запит для пошуку
         query = {
             "gender": "male",
-            "age": {"$gte": partner_requirements.get("age", [0])[0], "$lte": partner_requirements.get("age", [100])[1]},
-            "height": {"$gte": partner_requirements.get("height", [0])[0], "$lte": partner_requirements.get("height", [250])[1]},
-            "weight": {"$gte": partner_requirements.get("weight", [0])[0], "$lte": partner_requirements.get("weight", [300])[1]},
-            "zodiac_sign": {"$in": partner_requirements.get("zodiac_sign", [])},
+            "age": {"$gte": age_min, "$lte": age_max},
+            "height": {"$gte": height_min, "$lte": height_max},
+            "weight": {"$gte": weight_min, "$lte": weight_max},
+            "zodiac_sign": {"$in": zodiac_signs} if zodiac_signs else {"$exists": True}
         }
 
         # Підрахунок чоловіків, які відповідають вимогам
         matching_grooms_count = db.clients.count_documents(query)
+
+        # Додаємо результати для нареченої
         results.append({
-            "bride": bride["self_description"],
+            "bride": bride.get("self_description", "No description provided"),
             "matching_grooms_count": matching_grooms_count,
         })
 
     # Відображення результату
     return render_template("matching_grooms.html", results=results)
+
 
 
 @app.route('/api/login', methods=['POST'])

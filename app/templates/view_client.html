@@ -23,6 +23,27 @@
                 <p><strong>Weight:</strong> {{ client["weight"] }} kg</p>
                 <p><strong>Zodiac Sign:</strong> {{ client["zodiac_sign"] }}</p>
                 <p><strong>Description:</strong> {{ client["self_description"] }}</p>
+
+                <!-- Випадаюче меню для Partner Requirements -->
+                <button class="btn btn-secondary mt-3" type="button" data-bs-toggle="collapse" data-bs-target="#partnerRequirements" aria-expanded="false" aria-controls="partnerRequirements">
+                    View Partner Requirements
+                </button>
+                
+                <div class="collapse mt-3" id="partnerRequirements">
+                    <ul class="list-group">
+                        <li class="list-group-item"><strong>Min Age:</strong> {{ client["partner_requirements"]["partner_min_age"] }}</li>
+                        <li class="list-group-item"><strong>Max Age:</strong> {{ client["partner_requirements"]["partner_max_age"] }}</li>
+                        <li class="list-group-item"><strong>Min Height:</strong> {{ client["partner_requirements"]["partner_min_height"] }} cm</li>
+                        <li class="list-group-item"><strong>Max Height:</strong> {{ client["partner_requirements"]["partner_max_height"] }} cm</li>
+                        <li class="list-group-item"><strong>Min Weight:</strong> {{ client["partner_requirements"]["partner_min_weight"] }} kg</li>
+                        <li class="list-group-item"><strong>Max Weight:</strong> {{ client["partner_requirements"]["partner_max_weight"] }} kg</li>
+                        <li class="list-group-item"><strong>Preferred Zodiac Signs:</strong>
+                            {% for sign in client["partner_requirements"]["partner_zodiac_signs"] %}
+                                {{ sign }}{% if not loop.last %}, {% endif %}
+                            {% endfor %}
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
 
