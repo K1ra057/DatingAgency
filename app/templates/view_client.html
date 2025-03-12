@@ -31,12 +31,12 @@
                 
                 <div class="collapse mt-3" id="partnerRequirements">
                     <ul class="list-group">
-                        <li class="list-group-item"><strong>Min Age:</strong> {{ client["partner_requirements"]["partner_min_age"] }}</li>
-                        <li class="list-group-item"><strong>Max Age:</strong> {{ client["partner_requirements"]["partner_max_age"] }}</li>
-                        <li class="list-group-item"><strong>Min Height:</strong> {{ client["partner_requirements"]["partner_min_height"] }} cm</li>
-                        <li class="list-group-item"><strong>Max Height:</strong> {{ client["partner_requirements"]["partner_max_height"] }} cm</li>
-                        <li class="list-group-item"><strong>Min Weight:</strong> {{ client["partner_requirements"]["partner_min_weight"] }} kg</li>
-                        <li class="list-group-item"><strong>Max Weight:</strong> {{ client["partner_requirements"]["partner_max_weight"] }} kg</li>
+                        <li class="list-group-item"><strong>Min Age:</strong> {{ client["partner_requirements"]["min_age"] }}</li>
+                        <li class="list-group-item"><strong>Max Age:</strong> {{ client["partner_requirements"]["max_age"] }}</li>
+                        <li class="list-group-item"><strong>Min Height:</strong> {{ client["partner_requirements"]["min_height"] }} cm</li>
+                        <li class="list-group-item"><strong>Max Height:</strong> {{ client["partner_requirements"]["max_height"] }} cm</li>
+                        <li class="list-group-item"><strong>Min Weight:</strong> {{ client["partner_requirements"]["min_weight"] }} kg</li>
+                        <li class="list-group-item"><strong>Max Weight:</strong> {{ client["partner_requirements"]["max_weight"] }} kg</li>
                         <li class="list-group-item"><strong>Preferred Zodiac Signs:</strong>
                             {% for sign in client["partner_requirements"]["partner_zodiac_signs"] %}
                                 {{ sign }}{% if not loop.last %}, {% endif %}

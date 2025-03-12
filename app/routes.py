@@ -64,28 +64,41 @@ def add_client():
     form = ClientForm()
     if form.validate_on_submit():
         registration_date = datetime.combine(
-            form.registration_date.data, datetime.min.time())
-        new_client = {
-            "gender": form.gender.data,
-            "registration_date": registration_date,
-            "age": form.age.data,
-            "height": form.height.data,
-            "weight": form.weight.data,
-            "zodiac_sign": form.zodiac_sign.data,
-            "self_description": form.self_description.data,
-            "partner_requirements": {
-                "zodiac_sign": form.partner_zodiac_sign.data,
-                "min_age": form.partner_min_age.data,
-                "max_age": form.partner_max_age.data,
-                "min_height": form.partner_min_height.data,
-                "max_height": form.partner_max_height.data,
-                "min_weight": form.partner_min_weight.data,
-                "max_weight": form.partner_max_weight.data,
-            },
-        }
-        db.clients.insert_one(new_client)
-        flash("Client added successfully!", "success")
-        return redirect(url_for("clients", page=1))
+            form.registration_date.data, datetime.min.time()
+        )
+        
+        # Получение значений знаков зодиака партнера
+        partner_zodiac_signs = request.form.getlist("partner_zodiac_sign")
+
+        # Создание нового клиента с конвертацией числовых полей в int
+        try:
+            new_client = {
+                "gender": form.gender.data,
+                "registration_date": registration_date,
+                "age": int(form.age.data) if form.age.data else None,
+                "height": int(form.height.data) if form.height.data else None,
+                "weight": int(form.weight.data) if form.weight.data else None,
+                "zodiac_sign": form.zodiac_sign.data,
+                "self_description": form.self_description.data,
+                "partner_requirements": {
+                    "partner_zodiac_signs": partner_zodiac_signs,
+                    "min_age": int(request.form.get("partner_min_age")) if request.form.get("partner_min_age") else None,
+                    "max_age": int(request.form.get("partner_max_age")) if request.form.get("partner_max_age") else None,
+                    "min_height": int(request.form.get("partner_min_height")) if request.form.get("partner_min_height") else None,
+                    "max_height": int(request.form.get("partner_max_height")) if request.form.get("partner_max_height") else None,
+                    "min_weight": int(request.form.get("partner_min_weight")) if request.form.get("partner_min_weight") else None,
+                    "max_weight": int(request.form.get("partner_max_weight")) if request.form.get("partner_max_weight") else None,
+                },
+            }
+
+            # Сохранение нового клиента в базе данных
+            db.clients.insert_one(new_client)
+            flash("Client added successfully!", "success")
+            return redirect(url_for("clients", page=1))
+        
+        except ValueError as e:
+            flash(f"Invalid input: {str(e)}", "danger")
+    
     return render_template("add_client.html", form=form)
 
 
@@ -140,7 +153,7 @@ def edit_client(client_id):
 def delete_client(client_id):
     db.clients.delete_one({"_id": ObjectId(client_id)})
     flash("Client deleted successfully!", "success")
-    return redirect(url_for("clients", page=1))
+    return jsonify({"message": "success"})
 
 # Перегляд детальної інформації про клієнта
 
@@ -183,32 +196,37 @@ def meetings(page=1):
 @role_decorator("operator")
 def add_meeting():
     if request.method == "POST":
-        # Отримання даних із форми
+        # Получение данных из формы
         client1_id = request.form.get("client1_id")
         client2_id = request.form.get("client2_id")
         date_str = request.form.get("date")
 
         try:
-            # Перетворення дати з рядка у формат datetime
+            # Преобразование даты из строки в формат datetime
             date = datetime.strptime(date_str, "%Y-%m-%d")
         except ValueError:
             flash("Invalid date format. Please use YYYY-MM-DD.", "danger")
             return redirect(url_for("add_meeting"))
 
         new_meeting = {
-            "client1_id": client1_id,
-            "client2_id": client2_id,
-            "date": date,  # Зберігаємо дату у форматі datetime
+            "client1_id": ObjectId(client1_id),
+            "client2_id": ObjectId(client2_id),
+            "date": date,  # Сохраняем дату в формате datetime
             "status": "planned"
         }
 
-        # Збереження зустрічі в MongoDB
+        # Сохранение встречи в MongoDB
         db.meetings.insert_one(new_meeting)
         flash("Meeting added successfully!", "success")
         return redirect(url_for("meetings", page=1))
 
-    # Завантаження клієнтів для форми створення зустрічі
+    # Загрузка клиентов для формы создания встречи
     clients_list = list(db.clients.find())
+
+    # Добавляем форматирование данных для отображения в шаблоне
+    for client in clients_list:
+        client['display'] = f"{client['gender']} | Возраст: {client['age']} | Рост: {client['height']} см | Вес: {client['weight']} кг | Знак: {client['zodiac_sign']}"
+
     return render_template("add_meeting.html", clients=clients_list)
 
 # Архів зустрічей
@@ -465,7 +483,7 @@ def non_missing_partners():
     for client in clients:
         meetings = list(db.meetings.find(
             {"$or": [{"client1_id": str(client["_id"])}, {"client2_id": str(client["_id"])}]}))
-        if all(meeting["status"] == "completed" for meeting in meetings):
+        if all(meeting["status"] != "cancelled" and meeting["status"] != "planned" for meeting in meetings):
             result.append(client)
 
     # Логування
@@ -474,53 +492,50 @@ def non_missing_partners():
     return render_template("non_missing_partners.html", partners=result, gender=gender)
 
 
-@app.route("/matching_grooms", methods=["GET"])
-def matching_grooms():
+@app.route("/matching_grooms/<bride>", methods=["GET"])
+def matching_grooms(bride):
     # Отримати всіх жінок із бази
     brides = list(db.clients.find({"gender": "female"}))
     results = []
+    if (bride == "-"):
+        bride = brides[0]
+    else:
+        bride = db.clients.find_one({"gender": "female", "self_description" : f"{bride}"})
+    print("azaz")
+    print(bride)
+    # Отримання вимог до партнера
+    partner_requirements = bride.get("partner_requirements", {})
 
-    for bride in brides:
-        # Отримання вимог до партнера
-        partner_requirements = bride.get("partner_requirements", {})
+    # Отримуємо діапазон віку
+    age_min = partner_requirements.get("min_age", 0)
+    age_max = partner_requirements.get("max_age", 120)
 
-        # Отримуємо діапазон віку
-        age_min = partner_requirements.get("min_age", 0)
-        age_max = partner_requirements.get("max_age", 120)
+    # Отримуємо діапазон зросту
+    height_min = partner_requirements.get("min_height", 0)
+    height_max = partner_requirements.get("max_height", 250)
 
-        # Отримуємо діапазон зросту
-        height_min = partner_requirements.get("min_height", 0)
-        height_max = partner_requirements.get("max_height", 250)
+    # Отримуємо діапазон ваги
+    weight_min = partner_requirements.get("min_weight", 0)
+    weight_max = partner_requirements.get("max_weight", 300)
 
-        # Отримуємо діапазон ваги
-        weight_min = partner_requirements.get("min_weight", 0)
-        weight_max = partner_requirements.get("max_weight", 300)
-
-        # Отримуємо знаки зодіаку
-        zodiac_signs = partner_requirements.get("zodiac_signs", [])
-        if not isinstance(zodiac_signs, list):  # Переконуємося, що це список
-            zodiac_signs = [zodiac_signs]
+    # Отримуємо знаки зодіаку
+    zodiac_signs = partner_requirements.get("partner_zodiac_signs", [])
+    if not isinstance(zodiac_signs, list):  # Переконуємося, що це список
+        zodiac_signs = [zodiac_signs]
 
         # Формуємо запит для пошуку
-        query = {
+    query = {
             "gender": "male",
             "age": {"$gte": age_min, "$lte": age_max},
             "height": {"$gte": height_min, "$lte": height_max},
             "weight": {"$gte": weight_min, "$lte": weight_max},
             "zodiac_sign": {"$in": zodiac_signs} if zodiac_signs else {"$exists": True}
-        }
-
-        # Підрахунок чоловіків, які відповідають вимогам
-        matching_grooms_count = db.clients.count_documents(query)
-
-        # Додаємо результати для нареченої
-        results.append({
-            "bride": bride.get("self_description", "No description provided"),
-            "matching_grooms_count": matching_grooms_count,
-        })
+    }
+    # Підрахунок чоловіків, які відповідають вимогам
+    grooms = db.clients.find(query)
 
     # Відображення результату
-    return render_template("matching_grooms.html", results=results)
+    return render_template("matching_grooms.html", grooms=grooms, brides = brides, selected = bride["self_description"])
 
 
 
@@ -584,10 +599,10 @@ def matches(user_id):
         "age": {"$gte": requirements.get("min_age", 0), "$lte": requirements.get("max_age", 120)},
         "height": {"$gte": requirements.get("min_height", 0), "$lte": requirements.get("max_height", 250)},
         "weight": {"$gte": requirements.get("min_weight", 0), "$lte": requirements.get("max_weight", 300)},
-        "zodiac_sign": {"$in": requirements.get("zodiac_sign", [])},
+        "zodiac_sign": {"$in": requirements.get("partner_zodiac_signs", [])},
         "gender": "male" if user["gender"] == "female" else "female"
     }
-
+    print(query)
     matches = list(db.clients.find(query))
     return render_template("matches.html", user=user, matches=matches)
 
@@ -600,5 +615,5 @@ def canceled_meetings():
 
 @app.route('/completed_meetings', methods=["GET"])
 def completed_meetings():
-    result = list(db.meetings.find({"status": "completed"}))
+    result = list(db.archive.find({}))
     return render_template("completed_meetings.html", meetings=result)
