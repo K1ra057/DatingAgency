@@ -1,7 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from pymongo import MongoClient
 from bson.objectid import ObjectId
-from main.forms import ClientForm
+from app.forms import ClientForm
 from datetime import datetime, timedelta
 from decorators.role_decorator import role_decorator
 # Ініціалізація Flask-додатка
